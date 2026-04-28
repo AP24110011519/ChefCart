@@ -1,0 +1,88 @@
+{% extends "base.html" %}
+{% block title %}ChefCart – Book a Professional Chef{% endblock %}
+{% block content %}
+
+<section class="hero">
+  <div class="hero-content">
+    <p class="hero-eyebrow">Professional Chefs, Delivered Home</p>
+    <h1 class="hero-title">Cook Extraordinary<br><em>Meals Together</em></h1>
+    <p class="hero-sub">Book top-rated chefs for private dining, parties, or everyday cooking — starting at just ₹1,800 per session.</p>
+    <div class="hero-actions">
+      <a href="{{ url_for('chefs') }}" class="btn btn-primary">Browse Chefs</a>
+      {% if not session.user_id %}
+      <a href="{{ url_for('signup') }}" class="btn btn-ghost">Get Started Free</a>
+      {% endif %}
+    </div>
+    <div class="hero-tags">
+      {% for c in cuisines %}
+        <a href="{{ url_for('chefs', cuisine=c) }}" class="tag">{{ c }}</a>
+      {% endfor %}
+    </div>
+  </div>
+  <div class="hero-visual">
+    <div class="hero-card-stack">
+      <div class="hcard hcard-1">🍛 North Indian</div>
+      <div class="hcard hcard-2">🍝 Italian</div>
+      <div class="hcard hcard-3">🥘 Mughlai</div>
+    </div>
+  </div>
+</section>
+
+<section class="stats-bar">
+  <div class="stat"><strong>150+</strong><span>Verified Chefs</span></div>
+  <div class="stat-divider"></div>
+  <div class="stat"><strong>2,400+</strong><span>Happy Bookings</span></div>
+  <div class="stat-divider"></div>
+  <div class="stat"><strong>12+</strong><span>Cuisines</span></div>
+  <div class="stat-divider"></div>
+  <div class="stat"><strong>4.8★</strong><span>Average Rating</span></div>
+</section>
+
+<section class="section">
+  <div class="section-header">
+    <div>
+      <p class="section-label">🏆 Recommendations</p>
+      <h2 class="section-title">Top-Rated Chefs</h2>
+    </div>
+    <a href="{{ url_for('chefs') }}" class="btn-outline-sm">View All →</a>
+  </div>
+  <div class="chef-grid">
+    {% for chef in top_chefs %}
+    <div class="chef-card" style="--delay: {{ loop.index0 * 0.08 }}s">
+      <div class="chef-photo-wrap">
+        <img src="{{ chef.photo_url }}" alt="{{ chef.name }}" class="chef-photo">
+        <span class="cuisine-badge">{{ chef.cuisine }}</span>
+      </div>
+      <div class="chef-info">
+        <h3 class="chef-name">{{ chef.name }}</h3>
+        <div class="chef-meta">
+          <span class="stars">
+            {% for i in range(1,6) %}{% if i <= chef.avg_rating|int %}⭐{% else %}☆{% endif %}{% endfor %}
+            <strong>{{ chef.avg_rating }}</strong><small>({{ chef.review_count }})</small>
+          </span>
+          <span class="exp">{{ chef.experience }} yrs</span>
+        </div>
+        <p class="chef-bio">{{ chef.bio[:90] }}…</p>
+        <div class="chef-footer">
+          <span class="price">₹{{ chef.price|int }}<small>/session</small></span>
+          <a href="{{ url_for('chef_detail', chef_id=chef.id) }}" class="btn btn-sm">Book Now</a>
+        </div>
+      </div>
+    </div>
+    {% endfor %}
+  </div>
+</section>
+
+<section class="how-section">
+  <div class="section-header centered">
+    <p class="section-label">Simple Process</p>
+    <h2 class="section-title" style="color:#fff">How ChefCart Works</h2>
+  </div>
+  <div class="steps-grid">
+    <div class="step"><div class="step-icon">🔍</div><h3>Browse &amp; Filter</h3><p>Find chefs by cuisine, price range, and ratings.</p></div>
+    <div class="step"><div class="step-icon">📅</div><h3>Book a Slot</h3><p>Select your date and time. Instant confirmation.</p></div>
+    <div class="step"><div class="step-icon">👨‍🍳</div><h3>Chef Arrives</h3><p>Your chef comes prepared to cook in your kitchen.</p></div>
+    <div class="step"><div class="step-icon">⭐</div><h3>Rate &amp; Review</h3><p>Share your experience and help others choose.</p></div>
+  </div>
+</section>
+{% endblock %}

@@ -1,0 +1,137 @@
+{% extends "base.html" %}
+{% block title %}{{ chef.name }} – ChefCart{% endblock %}
+{% block content %}
+<div class="detail-layout">
+  <div class="detail-main">
+
+    <div class="profile-card">
+      <img src="{{ chef.photo_url }}" alt="{{ chef.name }}" class="profile-photo">
+      <div class="profile-info">
+        <span class="cuisine-badge large">{{ chef.cuisine }}</span>
+        <h1 class="profile-name">{{ chef.name }}</h1>
+        <div class="profile-meta">
+          <div class="stars-lg">
+            {% for i in range(1,6) %}{% if i <= chef.avg_rating|int %}⭐{% else %}☆{% endif %}{% endfor %}
+            <strong>{{ chef.avg_rating }}</strong>
+            <span class="muted">({{ chef.review_count }} reviews)</span>
+          </div>
+          <span class="pill">{{ chef.experience }} years experience</span>
+          <span class="pill price-pill">₹{{ chef.price|int }} / session</span>
+        </div>
+        <div class="contact-card">
+          <h2 class="contact-title">📍 Contact & Location</h2>
+          <div class="contact-row"><strong>Email:</strong> <a href="mailto:{{ chef.email }}">{{ chef.email }}</a></div>
+          <div class="contact-row"><strong>Phone:</strong> <a href="tel:{{ chef.phone }}">{{ chef.phone }}</a></div>
+          <div class="contact-row"><strong>Restaurant:</strong> {{ chef.restaurant }}</div>
+        </div>
+        <p class="profile-bio">{{ chef.bio }}</p>
+      </div>
+    </div>
+
+    <div class="section-card">
+      <h2 class="card-title">📅 Book {{ chef.name }}</h2>
+      {% if session.user_id %}
+        {% if already_booked %}
+          <div class="info-banner">✅ You already have a booking with this chef. Check your <a href="{{ url_for('dashboard') }}">Dashboard</a>.</div>
+        {% else %}
+          <form method="POST" action="{{ url_for('book_chef', chef_id=chef.id) }}" class="booking-form">
+            <div class="form-row">
+              <div class="form-group">
+                <label for="date">Select Date</label>
+                <input type="date" id="date" name="date" required>
+              </div>
+              <div class="form-group">
+                <label for="time_slot">Time Slot</label>
+                <select id="time_slot" name="time_slot" required>
+                  <option value="">Choose a time</option>
+                  <option value="08:00 AM">08:00 AM – Breakfast</option>
+                  <option value="01:00 PM">01:00 PM – Lunch</option>
+                  <option value="04:00 PM">04:00 PM – Tea / Snacks</option>
+                  <option value="07:00 PM">07:00 PM – Dinner</option>
+                  <option value="08:00 PM">08:00 PM – Late Dinner</option>
+                </select>
+              </div>
+            </div>
+            <div class="booking-summary">💳 Total: <strong>₹{{ chef.price|int }}</strong> per session</div>
+            <button type="submit" class="btn btn-primary btn-block">Confirm Booking</button>
+          </form>
+        {% endif %}
+      {% else %}
+        <div class="info-banner"><a href="{{ url_for('login') }}">Log in</a> or <a href="{{ url_for('signup') }}">sign up</a> to book this chef.</div>
+      {% endif %}
+    </div>
+
+    <div class="section-card">
+      <h2 class="card-title">⭐ Reviews</h2>
+      {% if session.user_id and not already_reviewed %}
+        <form method="POST" action="{{ url_for('add_review', chef_id=chef.id) }}" class="review-form">
+          <p class="form-label">Rate your experience:</p>
+          <div class="star-picker">
+            {% for i in range(1,6) %}
+              <span class="star-btn" onclick="setRating({{ i }})">☆</span>
+            {% endfor %}
+          </div>
+          <input type="hidden" name="rating" id="ratingInput">
+          <div class="form-group">
+            <textarea name="comment" placeholder="Write a short review…" rows="3" class="form-textarea"></textarea>
+          </div>
+          <button type="submit" class="btn btn-primary">Submit Review</button>
+        </form>
+        <hr class="divider">
+      {% elif session.user_id and already_reviewed %}
+        <div class="info-banner">✏️ You've already reviewed this chef.</div>
+        <hr class="divider">
+      {% endif %}
+
+      {% if reviews %}
+        <div class="reviews-list">
+          {% for r in reviews %}
+          {% if r['user_name'] or r['comment'] %}
+          <div class="review-item">
+            <div class="review-header">
+              <div class="reviewer-avatar">{% if r['user_name'] %}{{ r['user_name'][0] }}{% else %}G{% endif %}</div>
+              <div>
+                <strong>{{ r['user_name'] or 'Guest' }}</strong>
+                <div class="review-stars">{% for i in range(1,6) %}{% if i <= r['rating'] %}⭐{% else %}☆{% endif %}{% endfor %}</div>
+              </div>
+              <span class="review-date muted">{{ r['created_at'][:10] }}</span>
+            </div>
+            {% if r['comment'] %}<p class="review-comment">{{ r['comment'] }}</p>{% endif %}
+          </div>
+          {% endif %}
+          {% endfor %}
+        </div>
+      {% else %}
+        <p class="muted">No reviews yet. Be the first to review!</p>
+      {% endif %}
+    </div>
+  </div>
+
+  <aside class="detail-sidebar">
+    <h3 class="sidebar-title">More {{ chef.cuisine }} Chefs</h3>
+    {% for s in suggestions %}
+    <div class="suggestion-card">
+      <img src="{{ s.photo_url }}" alt="{{ s.name }}" class="sug-photo">
+      <div class="sug-info">
+        <strong>{{ s.name }}</strong>
+        <span class="muted small">{{ s.avg_rating }}★ · ₹{{ s.price|int }}</span>
+        <a href="{{ url_for('chef_detail', chef_id=s.id) }}" class="btn btn-xs">View</a>
+      </div>
+    </div>
+    {% else %}
+    <p class="muted small">No similar chefs found.</p>
+    {% endfor %}
+  </aside>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+  var d = document.getElementById('date');
+  if(d) d.min = new Date().toISOString().split('T')[0];
+  function setRating(val) {
+    document.getElementById('ratingInput').value = val;
+    document.querySelectorAll('.star-btn').forEach(function(s,i){ s.textContent = i < val ? '⭐' : '☆'; });
+  }
+</script>
+{% endblock %}

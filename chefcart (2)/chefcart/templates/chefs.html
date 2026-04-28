@@ -1,0 +1,81 @@
+{% extends "base.html" %}
+{% block title %}Browse Chefs – ChefCart{% endblock %}
+{% block content %}
+<div class="page-header">
+  <h1>Find Your Perfect Chef</h1>
+  <p>{{ chefs|length }} chef{{ 's' if chefs|length != 1 }} available</p>
+</div>
+
+<div class="chefs-layout">
+  <aside class="filter-sidebar">
+    <h3 class="filter-title">🔍 Filter Chefs</h3>
+    <form method="GET" action="{{ url_for('chefs') }}">
+      <div class="filter-group">
+        <label>Cuisine</label>
+        <select name="cuisine" onchange="this.form.submit()">
+          <option value="">All Cuisines</option>
+          {% for c in cuisines %}
+          <option value="{{ c }}" {% if c == selected_cuisine %}selected{% endif %}>{{ c }}</option>
+          {% endfor %}
+        </select>
+      </div>
+      <div class="filter-group">
+        <label>Price Range (₹ / session)</label>
+        <div class="range-row">
+          <input type="number" name="min_price" placeholder="Min" value="{{ min_price if min_price > 0 else '' }}" min="0">
+          <span>–</span>
+          <input type="number" name="max_price" placeholder="Max" value="{{ max_price if max_price < 999999 else '' }}" min="0">
+        </div>
+      </div>
+      <div class="filter-group">
+        <label>Minimum Rating</label>
+        <select name="min_rating" onchange="this.form.submit()">
+          <option value="0"   {% if min_rating == 0   %}selected{% endif %}>Any Rating</option>
+          <option value="3"   {% if min_rating == 3   %}selected{% endif %}>3★ &amp; above</option>
+          <option value="4"   {% if min_rating == 4   %}selected{% endif %}>4★ &amp; above</option>
+          <option value="4.5" {% if min_rating == 4.5 %}selected{% endif %}>4.5★ &amp; above</option>
+        </select>
+      </div>
+      <button type="submit" class="btn btn-primary filter-btn">Apply Filters</button>
+      <a href="{{ url_for('chefs') }}" class="btn btn-ghost filter-btn">Clear</a>
+    </form>
+  </aside>
+
+  <div class="chefs-results">
+    {% if chefs %}
+    <div class="chef-grid">
+      {% for chef in chefs %}
+      <div class="chef-card" style="animation-delay:{{ loop.index0 * 0.06 }}s">
+        <div class="chef-photo-wrap">
+          <img src="{{ chef.photo_url }}" alt="{{ chef.name }}" class="chef-photo">
+          <span class="cuisine-badge">{{ chef.cuisine }}</span>
+        </div>
+        <div class="chef-info">
+          <h3 class="chef-name">{{ chef.name }}</h3>
+          <div class="chef-meta">
+            <span class="stars">
+              {% for i in range(1,6) %}{% if i <= chef.avg_rating|int %}⭐{% else %}☆{% endif %}{% endfor %}
+              <strong>{{ chef.avg_rating }}</strong><small>({{ chef.review_count }})</small>
+            </span>
+            <span class="exp">{{ chef.experience }} yrs</span>
+          </div>
+          <p class="chef-bio">{{ chef.bio[:100] }}…</p>
+          <div class="chef-footer">
+            <span class="price">₹{{ chef.price|int }}<small>/session</small></span>
+            <a href="{{ url_for('chef_detail', chef_id=chef.id) }}" class="btn btn-sm">View Profile</a>
+          </div>
+        </div>
+      </div>
+      {% endfor %}
+    </div>
+    {% else %}
+    <div class="empty-state">
+      <div class="empty-icon">🔍</div>
+      <h3>No chefs found</h3>
+      <p>Try adjusting your filters.</p>
+      <a href="{{ url_for('chefs') }}" class="btn btn-primary">Clear Filters</a>
+    </div>
+    {% endif %}
+  </div>
+</div>
+{% endblock %}

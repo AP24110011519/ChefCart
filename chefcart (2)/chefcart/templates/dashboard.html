@@ -1,0 +1,79 @@
+{% extends "base.html" %}
+{% block title %}My Dashboard – ChefCart{% endblock %}
+{% block content %}
+<div class="page-header">
+  <h1>👋 Welcome, {{ user['name'] }}!</h1>
+  <p>Manage your bookings and reviews below.</p>
+</div>
+
+<div class="dashboard-layout">
+  <section class="dash-section">
+    <h2 class="dash-title">📅 My Bookings</h2>
+    {% if bookings %}
+    <div class="table-wrap">
+      <table class="data-table">
+        <thead>
+          <tr><th>Chef</th><th>Cuisine</th><th>Date</th><th>Time</th><th>Price</th><th>Status</th><th>Action</th></tr>
+        </thead>
+        <tbody>
+          {% for b in bookings %}
+          <tr>
+            <td>
+              <a href="{{ url_for('chef_detail', chef_id=b['chef_id']) }}" class="table-chef-link">
+                <img src="{{ b['photo_url'] }}" class="table-avatar" alt="{{ b['chef_name'] }}">
+                {{ b['chef_name'] }}
+              </a>
+            </td>
+            <td><span class="tag-sm">{{ b['cuisine'] }}</span></td>
+            <td>{{ b['date'] }}</td>
+            <td>{{ b['time_slot'] }}</td>
+            <td>₹{{ b['price']|int }}</td>
+            <td><span class="status-badge status-{{ b['status']|lower }}">{{ b['status'] }}</span></td>
+            <td>
+              {% if b['status'] == 'Confirmed' %}
+              <form method="POST" action="{{ url_for('cancel_booking', booking_id=b['id']) }}" onsubmit="return confirm('Cancel this booking?')">
+                <button type="submit" class="btn-danger-sm">Cancel</button>
+              </form>
+              {% else %}<span class="muted small">—</span>{% endif %}
+            </td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+    {% else %}
+    <div class="empty-state small-empty">
+      <div class="empty-icon">📅</div>
+      <p>No bookings yet. <a href="{{ url_for('chefs') }}">Find a chef →</a></p>
+    </div>
+    {% endif %}
+  </section>
+
+  <section class="dash-section">
+    <h2 class="dash-title">⭐ My Reviews</h2>
+    {% if reviews %}
+    <div class="reviews-grid">
+      {% for r in reviews %}
+      <div class="review-card">
+        <div class="review-card-header">
+          <img src="{{ r['photo_url'] }}" class="sug-photo" alt="{{ r['chef_name'] }}">
+          <div>
+            <strong>{{ r['chef_name'] }}</strong>
+            <span class="muted small">{{ r['cuisine'] }}</span>
+          </div>
+          <div class="review-stars">{% for i in range(1,6) %}{% if i <= r['rating'] %}⭐{% else %}☆{% endif %}{% endfor %}</div>
+        </div>
+        {% if r['comment'] %}<p class="review-comment">{{ r['comment'] }}</p>{% endif %}
+        <span class="review-date muted small">{{ r['created_at'][:10] }}</span>
+      </div>
+      {% endfor %}
+    </div>
+    {% else %}
+    <div class="empty-state small-empty">
+      <div class="empty-icon">⭐</div>
+      <p>No reviews yet. Book a chef and share your experience!</p>
+    </div>
+    {% endif %}
+  </section>
+</div>
+{% endblock %}
